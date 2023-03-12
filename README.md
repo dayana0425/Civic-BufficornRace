@@ -1,4 +1,4 @@
-# Civic Pass Ethereum Template
+# Civic Pass x Bufficorn Race Game
 
 This is a template app, demonstrating the integration of Civic Pass into an Ethereum dApp.
 
