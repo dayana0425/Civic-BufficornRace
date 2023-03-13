@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import "./style.css";
 
 function FlappyBuffi() {
-  const [moveSpeed, setMoveSpeed] = useState<number>(5);
-  const [gravity, setGravity] = useState<number>(0.5);
   const [gameState, setGameState] = useState<string>("Start");
   const [score, setScore] = useState<number>(0);
   const [pipeSprites, setPipeSprites] = useState<Array<PipeSprite>>([]);
@@ -14,13 +12,10 @@ function FlappyBuffi() {
   const messageRef = useRef<HTMLDivElement>(null);
 
   interface PipeSprite {
-    top?: number;
-    left?: number;
-    right?: number;
-    bottom?: number;
-    width?: number;
-    height?: number;
     increase_score?: number;
+    upper?: HTMLDivElement;
+    lower?: HTMLDivElement;
+    vel: number;
   }
 
   useEffect(() => {
@@ -29,8 +24,12 @@ function FlappyBuffi() {
         setGameState("Play");
         setScore(0);
         setPipeSprites([]);
-        messageRef.current!.innerHTML = "";
-        scoreValRef.current!.innerHTML = "0";
+        if (messageRef.current) {
+          messageRef.current.innerHTML = "";
+        }
+        if (scoreValRef.current) {
+          scoreValRef.current.innerHTML = "0";
+        }
         play();
       }
     }
@@ -40,187 +39,151 @@ function FlappyBuffi() {
     };
   }, [gameState]);
 
-  useEffect(() => {
-    const background = backgroundRef.current!.getBoundingClientRect();
+  const play = () => {
+    // Get the bird element and its starting position
     const bird = birdRef.current!;
-    const birdProps = bird.getBoundingClientRect();
-    let animationId: number;
+    const birdStartY = parseFloat(
+      getComputedStyle(bird).getPropertyValue("top")
+    );
 
-    function move() {
-      if (gameState !== "Play") return;
-      const newPipeSprites = pipeSprites
-        .map((pipe) => {
-          const element = document.getElementById(`pipe-${pipe.left}`);
-          const pipeSpriteProps = element!.getBoundingClientRect();
-          const birdProps = bird.getBoundingClientRect();
+    // Set up the bird's initial position and velocity
+    let birdY = birdStartY;
+    let birdVel = 0;
 
-          if (pipeSpriteProps.right <= 0) {
-            element!.remove();
-            return null;
-          } else if (
-            birdProps.left < pipeSpriteProps.left + pipeSpriteProps.width &&
-            birdProps.left + birdProps.width > pipeSpriteProps.left &&
-            birdProps.top < pipeSpriteProps.top + pipeSpriteProps.height &&
-            birdProps.top + birdProps.height > pipeSpriteProps.top
-          ) {
-            setGameState("End");
-            messageRef.current!.innerHTML = "Press Enter To Restart";
-            messageRef.current!.style.left = "28vw";
-            return null;
-          } else {
-            if (
-              pipeSpriteProps.right < birdProps.left &&
-              pipeSpriteProps.right + moveSpeed >= birdProps.left &&
-              pipe.increase_score === 1
-            ) {
-              setScore(score + 1);
+    document.addEventListener("keydown", handleKeyDown);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === " ") {
+        // If spacebar is pressed, flap the bird and update its velocity
+        birdVel = -5;
+        bird.classList.add("flap");
+        setTimeout(() => bird.classList.remove("flap"), 200);
+      }
+    }
+    // Game loop to update bird and pipe positions
+    const gameLoop = setInterval(() => {
+      birdY += birdVel;
+      bird.style.top = `${birdY}px`;
+      birdVel += 0.2;
+
+      // Check if bird has hit the ground or the ceiling
+      if (
+        birdY < 0 ||
+        birdY + bird.offsetHeight > backgroundRef.current!.offsetHeight
+      ) {
+        endGame();
+      }
+
+      spawnPipes();
+      if (score % 10 === 0 && score > 0 && pipeSprites.length === 0) {
+        spawnPipes();
+      }
+    }, 20);
+
+    // Function to end the game and clean up
+    function endGame() {
+      clearInterval(gameLoop);
+      document.removeEventListener("keydown", handleKeyDown);
+      setGameState("Over");
+      messageRef.current!.innerHTML = "Game Over";
+    }
+    return () => clearInterval(gameLoop);
+  };
+
+  useEffect(() => {
+    const gameLoop = setInterval(() => {
+      pipeSprites.forEach((pipe) => {
+        if (pipe.upper && pipe.lower) {
+          // Update pipe position
+          pipe.upper.style.left = `${parseFloat(pipe.upper.style.left) - 1}vw`;
+          pipe.lower.style.left = `${parseFloat(pipe.lower.style.left) - 1}vw`;
+
+          // Check if pipe is passed the bird
+          if (parseFloat(pipe.upper.style.left) < 5) {
+            if (pipe.increase_score === 1) {
+              setScore((prevScore) => prevScore + 1);
               pipe.increase_score = 0;
             }
-            element!.style.left = pipeSpriteProps.left - moveSpeed + "px";
-
-            return {
-              ...pipe,
-              left: pipeSpriteProps.left - moveSpeed,
-              right: pipeSpriteProps.left - moveSpeed + pipeSpriteProps.width,
-            };
           }
-        })
-        .filter((pipe) => pipe !== null) as Array<PipeSprite>;
-      setPipeSprites(newPipeSprites);
-      animationId = requestAnimationFrame(move);
-    }
-
-    animationId = requestAnimationFrame(move);
-
-    function applyGravity() {
-      if (gameState !== "Play") return;
-      let birdDy = 0;
-      function handleKeyDown(e: KeyboardEvent) {
-        if (e.key === "ArrowUp" || e.key === " ") {
-          birdDy = -7.6;
         }
-      }
-      document.addEventListener("keydown", handleKeyDown);
-      if (birdProps.top <= 0 || birdProps.bottom >= background.bottom) {
-        setGameState("End");
-        messageRef.current!.innerHTML = "Press Enter To Restart";
-        messageRef.current!.style.left = "28vw";
-        return;
-      }
-      bird.style.top =
-        birdProps.top + birdDy
-          ? birdProps.top + birdDy + gravity + "px"
-          : birdProps.top + gravity + "px";
-      requestAnimationFrame(applyGravity);
-    }
-    applyGravity();
+      });
 
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [gameState, pipeSprites, moveSpeed, gravity, score]);
-
-  function play() {
-    function move() {
-      if (gameState !== "Play") return;
-      const background = backgroundRef.current!.getBoundingClientRect();
-      const bird = birdRef.current!;
-      const birdProps = bird.getBoundingClientRect();
-      const newPipeSprites = pipeSprites
-        .map((pipe) => {
-          const element = document.getElementById(`pipe-${pipe.left}`);
-          const pipeSpriteProps = element!.getBoundingClientRect();
-          const birdProps = bird.getBoundingClientRect();
-
-          if (pipeSpriteProps.right <= 0) {
-            element!.remove();
-            return null;
-          } else if (
-            birdProps.left < pipeSpriteProps.left + pipeSpriteProps.width &&
-            birdProps.left + birdProps.width > pipeSpriteProps.left &&
-            birdProps.top < pipeSpriteProps.top + pipeSpriteProps.height &&
-            birdProps.top + birdProps.height > pipeSpriteProps.top
+      // check collision
+      pipeSprites.forEach((pipe) => {
+        if (pipe.upper && pipe.lower) {
+          if (
+            isColliding(birdRef.current!, pipe.upper.getBoundingClientRect()) ||
+            isColliding(birdRef.current!, pipe.lower.getBoundingClientRect())
           ) {
-            setGameState("End");
-            messageRef.current!.innerHTML = "Press Enter To Restart";
-            messageRef.current!.style.left = "28vw";
-            return null;
-          } else {
-            if (
-              pipeSpriteProps.right < birdProps.left &&
-              pipeSpriteProps.right + moveSpeed >= birdProps.left &&
-              pipe.increase_score === 1
-            ) {
-              setScore(score + 1);
-              pipe.increase_score = 0;
-            }
-            element!.style.left = pipeSpriteProps.left - moveSpeed + "px";
-            return {
-              ...pipe,
-              left: pipeSpriteProps.left - moveSpeed,
-              right: pipeSpriteProps.left - moveSpeed + pipeSpriteProps.width,
-            };
+            setGameState("Over");
+            messageRef.current!.innerHTML = "Game Over";
+            
+            // Remove all pipes
+            pipeSprites.forEach((pipe) => {
+              if (pipe.upper && pipe.lower) {
+                pipe.upper.remove();
+                pipe.lower.remove();
+              }
+            })
+
           }
-        })
-        .filter((pipe) => pipe !== null) as Array<PipeSprite>;
-      setPipeSprites(newPipeSprites);
-      requestAnimationFrame(move);
-    }
-    move();
-
-    function applyGravity() {
-      if (gameState !== "Play") return;
-      const bird = birdRef.current!;
-      const birdProps = bird.getBoundingClientRect();
-      let birdDy = 0;
-      function handleKeyDown(e: KeyboardEvent) {
-        if (e.key === "ArrowUp" || e.key === " ") {
-          birdDy = -7.6;
         }
-      }
-      document.addEventListener("keydown", handleKeyDown);
-      const background = backgroundRef.current!.getBoundingClientRect();
-      if (birdProps.top <= 0 || birdProps.bottom >= background.bottom) {
-        setGameState("End");
-        messageRef.current!.innerHTML = "Press Enter To Restart";
-        messageRef.current!.style.left = "28vw";
-        return;
-      }
-      bird.style.top =
-        birdProps.top + birdDy
-          ? birdProps.top + birdDy + gravity + "px"
-          : birdProps.top + gravity + "px";
-      requestAnimationFrame(applyGravity);
-    }
-    applyGravity();
+      });
+    }, 20);
+    return () => clearInterval(gameLoop);
+  }, [pipeSprites]);
 
-    function generatePipe() {
-      if (gameState !== "Play") return;
-      const pipe = document.createElement("div");
-      const pipeTop = document.createElement("div");
-      const pipeBottom = document.createElement("div");
-      const pipeTopHeight = Math.floor(Math.random() * 300) + 50;
-      const pipeBottomHeight = 500 - pipeTopHeight;
-      pipe.classList.add("pipe");
-      pipeTop.classList.add("pipe-top");
-      pipeBottom.classList.add("pipe-bottom");
-      pipe.style.left = "100vw";
-      pipeTop.style.height = pipeTopHeight + "px";
-      pipeBottom.style.height = pipeBottomHeight + "px";
-      pipe.id = `pipe-${pipeSprites[pipeSprites.length - 1].left}`;
-      pipe.appendChild(pipeTop);
-      pipe.appendChild(pipeBottom);
-      backgroundRef.current!.appendChild(pipe);
-      setPipeSprites([
-        ...pipeSprites,
-        {
-          left: 100,
-          increase_score: 1,
-        },
-      ]);
-      requestAnimationFrame(generatePipe);
+  function isColliding(a: HTMLImageElement, b: DOMRect) {
+    const aRect = a.getBoundingClientRect();
+    return !(
+      aRect.bottom < b.top ||
+      aRect.top > b.bottom ||
+      aRect.right < b.left ||
+      aRect.left > b.right
+    );
+  }
+
+  // Constant value for the gap between two pipes
+  let pipe_gap = 35;
+  let pipe_seperation = 0;
+
+  function spawnPipes() {
+    // Create a new pipe element
+    if (pipe_seperation > 115) {
+      pipe_seperation = 0;
+
+      // Calculate random position of pipes on y axis
+      let pipe_posi = Math.floor(Math.random() * 43) + 8;
+      let pipe_sprite_inv = document.createElement("div");
+      pipe_sprite_inv.className = "pipe_sprite_inv";
+      pipe_sprite_inv.style.top = pipe_posi - pipe_gap + "vh";
+      pipe_sprite_inv.style.left = "100vw";
+
+      let pipe_sprite = document.createElement("div");
+      pipe_sprite.className = "pipe_sprite";
+      pipe_sprite.style.top = pipe_posi + pipe_gap + "vh";
+      pipe_sprite.style.left = "100vw";
+
+      // Append the created pipe element as a child of the background element
+      const background = backgroundRef.current;
+      if (background) {
+        background.appendChild(pipe_sprite_inv);
+        background.appendChild(pipe_sprite);
+
+        setPipeSprites((prevPipeSprites) => {
+          const newPipeSprites = [
+            ...prevPipeSprites,
+            {
+              upper: pipe_sprite_inv,
+              lower: pipe_sprite,
+              increase_score: 1,
+              vel: 1,
+            },
+          ];
+          return newPipeSprites;
+        });
+      }
     }
-    generatePipe();
+    pipe_seperation++;
   }
 
   return (

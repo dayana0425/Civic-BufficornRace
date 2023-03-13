@@ -12,7 +12,7 @@ body {
 .background {
 	height: 100vh;
 	width: 100vw;
-	background-image: linear-gradient(to right, red , yellow);
+	background-image: linear-gradient(to right, red, yellow);
 }
 
 .bird {
@@ -23,16 +23,27 @@ body {
 	top: 40vh;
 	left: 30vw;
 	z-index: 100;
-    background-color: blue;
+	background-color: blue;
 }
 
 .pipe_sprite {
-	position: fixed;
-	top: 40vh;
-	left: 100vw;
-	height: 70vh;
-	width: 6vw;
-	background-color: navy;
+	position: absolute;
+	width: 15vw;
+	height: 60vh;
+	background-color: #3e3e3e;
+	border-radius: 10px;
+	z-index: 2;
+}
+
+.pipe_sprite_inv {
+	position: absolute;
+	width: 15vw;
+	height: 60vh;
+	background-color: #3e3e3e;
+	border-radius: 10px;
+	z-index: 2;
+	transform: rotate(180deg);
+	
 }
 
 .message {
@@ -61,4 +72,3 @@ body {
 .score_val {
 	color: black;
 }
-
