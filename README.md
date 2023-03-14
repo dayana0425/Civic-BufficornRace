@@ -23,3 +23,11 @@ REACT_APP_GATEKEEPER_NETWORK=tgnuXXNMDLK8dy7Xm1TdeGyc95MDym4bvAQCwcW21Bf yarn st
 ## Credits
 
 Our project's base was: [civic-pass-eth-template](https://github.com/civicteam/civic-pass-eth-template)
+
+## Future Improvements
+* Implement leaderboard (Display top 10 accounts + score) & record every score on chain.
+  -Perhaps by using Polybase
+* Instead of the default bufficorn, people can use their ENS Avatar instead.
+  - This should be a quick add on
+* Top 10 winners are minted a special POAP for their accomplishment.
+  - POAP API
