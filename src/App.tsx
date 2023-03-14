@@ -32,7 +32,7 @@ import { TypedDataSigner } from "@ethersproject/abstract-signer";
 import FlappyBuffi from "./FlappyBuffi";
 
 const GATEKEEPER_NETWORK =
-  REACT_APP_GATEKEEPER_NETWORK || "ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6";
+  process.env.REACT_APP_GATEKEEPER_NETWORK || "ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6";
 
 const client = createClient(
   getDefaultClient({
@@ -51,7 +51,7 @@ const client = createClient(
   })
 );
 
-const Content = () => {
+const Content = () => { // not used
   const { address, isConnected } = useAccount();
   const { data: ensAvatar } = useEnsAvatar({ address });
   const { data: ensName } = useEnsName({ address });

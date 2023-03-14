@@ -1,6 +1,11 @@
 # Civic Pass x Bufficorn Race Game
 
-![](public/Screen%20Shot%202023-03-12%20at%204.22.39%20PM.png)
+### You must connect your wallet to play the game
+![](public/ConnectWallet.png)
+
+### Game Starts
+![](public/BufficornRace.png)
+
 ## Quick Start
 
 ```bash
