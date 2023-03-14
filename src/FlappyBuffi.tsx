@@ -6,7 +6,7 @@ function FlappyBuffi() {
   const [score, setScore] = useState<number>(0);
   const [pipeSprites, setPipeSprites] = useState<Array<PipeSprite>>([]);
   const [message, setMessage] = useState(
-    "Press the Enter key to start the game. Use the Space key to flap and avoid the pipes"
+    "Press the Enter key to start the game. Use the Space key to flap and avoid the pipes."
   );
 
   const backgroundRef = useRef<HTMLDivElement>(null);
