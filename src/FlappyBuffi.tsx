@@ -1,36 +1,71 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./style.css";
+import "./flappybuffi.css";
 
 function FlappyBuffi() {
   const [gameState, setGameState] = useState<string>("Start");
   const [score, setScore] = useState<number>(0);
   const [pipeSprites, setPipeSprites] = useState<Array<PipeSprite>>([]);
+  const [message, setMessage] = useState(
+    "Press the Enter key to start the game. Use the Space key to flap and avoid the pipes"
+  );
 
   const backgroundRef = useRef<HTMLDivElement>(null);
-  const birdRef = useRef<HTMLImageElement>(null);
-  const scoreValRef = useRef<HTMLSpanElement>(null);
+  const buffiRef = useRef<HTMLImageElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
+  let pipe_gap = 35;
+  let pipe_seperation = 0;
   interface PipeSprite {
-    increase_score?: number;
     upper?: HTMLDivElement;
     lower?: HTMLDivElement;
-    vel: number;
+    increase_score?: number;
   }
 
+  // game controls
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Enter" && gameState !== "Play") {
+      if (e.key === "Enter" && gameState === "Play") {
+        console.log("pause")
+      }
+
+      if (e.key === "Enter" && gameState === "Start") {
+        console.log("start")
         setGameState("Play");
         setScore(0);
         setPipeSprites([]);
-        if (messageRef.current) {
-          messageRef.current.innerHTML = "";
-        }
-        if (scoreValRef.current) {
-          scoreValRef.current.innerHTML = "0";
-        }
+        setMessage(
+          "Press the Enter key to start the game. Use the Space key to flap and avoid the pipes"
+        );
+        const buffi = buffiRef.current!;
+        buffi.style.top = "50%";
+        buffi.style.left = "10%";
         play();
+      }
+
+      if (e.key === "Enter" && gameState !== "Play") {
+        console.log("game over")
+        setGameState("Play");
+        setScore(0);
+        setPipeSprites([]);
+        setMessage("Game Over, Restarting Game...");
+        const buffi = buffiRef.current!;
+        buffi.style.top = "50%";
+        buffi.style.left = "10%";
+        const pipes = document.querySelectorAll(".pipe_sprite_inv");
+        pipes.forEach((pipe) => pipe.remove());
+        const pipes2 = document.querySelectorAll(".pipe_sprite");
+        pipes2.forEach((pipe) => pipe.remove());
+        play();
+      }
+
+      if (gameState === "Over") {
+        setGameState("Play");
+        setScore(0);
+        setPipeSprites([]);
+        const pipes = document.querySelectorAll(".pipe_sprite_inv");
+        pipes.forEach((pipe) => pipe.remove());
+        const pipes2 = document.querySelectorAll(".pipe_sprite");
+        pipes2.forEach((pipe) => pipe.remove());
       }
     }
     document.addEventListener("keydown", handleKeyDown);
@@ -40,35 +75,31 @@ function FlappyBuffi() {
   }, [gameState]);
 
   const play = () => {
-    // Get the bird element and its starting position
-    const bird = birdRef.current!;
+    const buffi = buffiRef.current!;
     const birdStartY = parseFloat(
-      getComputedStyle(bird).getPropertyValue("top")
+      getComputedStyle(buffi).getPropertyValue("top")
     );
 
-    // Set up the bird's initial position and velocity
     let birdY = birdStartY;
     let birdVel = 0;
 
     document.addEventListener("keydown", handleKeyDown);
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === " ") {
-        // If spacebar is pressed, flap the bird and update its velocity
         birdVel = -5;
-        bird.classList.add("flap");
-        setTimeout(() => bird.classList.remove("flap"), 200);
+        buffi.classList.add("flap");
+        setTimeout(() => buffi.classList.remove("flap"), 200);
       }
     }
-    // Game loop to update bird and pipe positions
+
     const gameLoop = setInterval(() => {
       birdY += birdVel;
-      bird.style.top = `${birdY}px`;
+      buffi.style.top = `${birdY}px`;
       birdVel += 0.2;
 
-      // Check if bird has hit the ground or the ceiling
       if (
         birdY < 0 ||
-        birdY + bird.offsetHeight > backgroundRef.current!.offsetHeight
+        birdY + buffi.offsetHeight > backgroundRef.current!.offsetHeight
       ) {
         endGame();
       }
@@ -77,27 +108,33 @@ function FlappyBuffi() {
       if (score % 10 === 0 && score > 0 && pipeSprites.length === 0) {
         spawnPipes();
       }
+      if (score % 10 === 0 && score > 0) {
+        pipe_gap -= 0.5;
+        pipe_seperation += 0.5;
+        if (pipe_gap < 20) {
+          pipe_gap = 20;
+        }
+        if (pipe_seperation > 115) {
+          pipe_seperation = 115;
+        }
+      }
     }, 20);
 
-    // Function to end the game and clean up
     function endGame() {
+      setGameState("Over");
       clearInterval(gameLoop);
       document.removeEventListener("keydown", handleKeyDown);
-      setGameState("Over");
-      messageRef.current!.innerHTML = "Game Over";
+      setMessage("Game Over. Press Enter to Restart Game.");
     }
     return () => clearInterval(gameLoop);
   };
 
   useEffect(() => {
-    const gameLoop = setInterval(() => {
+    const pipeInterval = setInterval(() => {
       pipeSprites.forEach((pipe) => {
         if (pipe.upper && pipe.lower) {
-          // Update pipe position
           pipe.upper.style.left = `${parseFloat(pipe.upper.style.left) - 1}vw`;
           pipe.lower.style.left = `${parseFloat(pipe.lower.style.left) - 1}vw`;
-
-          // Check if pipe is passed the bird
           if (parseFloat(pipe.upper.style.left) < 5) {
             if (pipe.increase_score === 1) {
               setScore((prevScore) => prevScore + 1);
@@ -107,29 +144,22 @@ function FlappyBuffi() {
         }
       });
 
-      // check collision
       pipeSprites.forEach((pipe) => {
         if (pipe.upper && pipe.lower) {
           if (
-            isColliding(birdRef.current!, pipe.upper.getBoundingClientRect()) ||
-            isColliding(birdRef.current!, pipe.lower.getBoundingClientRect())
+            isColliding(buffiRef.current!, pipe.upper.getBoundingClientRect())
           ) {
             setGameState("Over");
-            messageRef.current!.innerHTML = "Game Over";
-            
-            // Remove all pipes
-            pipeSprites.forEach((pipe) => {
-              if (pipe.upper && pipe.lower) {
-                pipe.upper.remove();
-                pipe.lower.remove();
-              }
-            })
-
+          }
+          if (
+            isColliding(buffiRef.current!, pipe.lower.getBoundingClientRect())
+          ) {
+            setGameState("Over");
           }
         }
       });
     }, 20);
-    return () => clearInterval(gameLoop);
+    return () => clearInterval(pipeInterval);
   }, [pipeSprites]);
 
   function isColliding(a: HTMLImageElement, b: DOMRect) {
@@ -142,33 +172,29 @@ function FlappyBuffi() {
     );
   }
 
-  // Constant value for the gap between two pipes
-  let pipe_gap = 35;
-  let pipe_seperation = 0;
-
   function spawnPipes() {
-    // Create a new pipe element
     if (pipe_seperation > 115) {
       pipe_seperation = 0;
+      const pipe_gap_height = 25;
+      const pipe_posi =
+        Math.floor(Math.random() * (100 - pipe_gap_height - 8)) + 8;
 
-      // Calculate random position of pipes on y axis
-      let pipe_posi = Math.floor(Math.random() * 43) + 8;
-      let pipe_sprite_inv = document.createElement("div");
+      const pipe_sprite_inv = document.createElement("div");
       pipe_sprite_inv.className = "pipe_sprite_inv";
-      pipe_sprite_inv.style.top = pipe_posi - pipe_gap + "vh";
+      pipe_sprite_inv.style.top = "0";
       pipe_sprite_inv.style.left = "100vw";
+      pipe_sprite_inv.style.height = `${pipe_posi}vh`;
 
-      let pipe_sprite = document.createElement("div");
+      const pipe_sprite = document.createElement("div");
       pipe_sprite.className = "pipe_sprite";
-      pipe_sprite.style.top = pipe_posi + pipe_gap + "vh";
+      pipe_sprite.style.top = `${pipe_posi + pipe_gap_height}vh`;
       pipe_sprite.style.left = "100vw";
+      pipe_sprite.style.height = `${100 - (pipe_posi + pipe_gap_height)}vh`;
 
-      // Append the created pipe element as a child of the background element
       const background = backgroundRef.current;
       if (background) {
         background.appendChild(pipe_sprite_inv);
         background.appendChild(pipe_sprite);
-
         setPipeSprites((prevPipeSprites) => {
           const newPipeSprites = [
             ...prevPipeSprites,
@@ -176,7 +202,6 @@ function FlappyBuffi() {
               upper: pipe_sprite_inv,
               lower: pipe_sprite,
               increase_score: 1,
-              vel: 1,
             },
           ];
           return newPipeSprites;
@@ -186,15 +211,17 @@ function FlappyBuffi() {
     pipe_seperation++;
   }
 
+  console.log("gameState", gameState);
   return (
-    <div className="App">
-      <div className="background" ref={backgroundRef}>
-        <img className="bird" ref={birdRef} src="./bufficorn.png" alt="bird" />
+    <div className="background" ref={backgroundRef}>
+      <img className="buffi" ref={buffiRef} src="./bufficorn.png" alt="buffi" />
+      {gameState !== "Play" && (
         <div className="message" ref={messageRef}>
-          Press Space To Start
+          {message}
         </div>
-        <div className="score">{score}</div>
-      </div>
+      )}
+      {gameState !== "Over" && <div className="score">{score}</div>}
+      {gameState !== "Over" && <div className="game-title">Bufficorn Race</div>}
     </div>
   );
 }

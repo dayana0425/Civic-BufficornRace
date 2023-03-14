@@ -1,0 +1,119 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	height: 100%;
+	width: 100%;
+	background-image: linear-gradient(to right, rgb(255, 0, 234), rgb(89, 0, 255));
+	position: fixed;
+	z-index: 0;
+}
+
+.background {
+	height: 100%;
+	width: 100%;
+	background-image: linear-gradient(to right, rgb(255, 0, 234), rgb(89, 0, 255));
+	position: fixed;
+	z-index: 0;
+}
+
+.buffi {
+	height: 90px;
+	width: 95px;
+	position: fixed;
+	border-radius: 80%;
+	top: 50%;
+	left: 10%;
+	transform: translate(-50%, -50%);
+	filter: drop-shadow(0 0 5px white);
+	background-image: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+	background-size: 200% 200%;
+	animation: rainbow 2s linear infinite;
+}
+
+@keyframes rainbow {
+	0% {
+		background-position: 0% 50%;
+	}
+
+	100% {
+		background-position: 100% 50%;
+	}
+}
+
+.pipe_sprite {
+	top: 0;
+	position: fixed;
+	width: 8vw;
+	height: 45vh;
+	background-color: #f8afff;
+	border-radius: 10px;
+	z-index: 2;
+}
+
+.pipe_sprite_inv {
+	top: 0;
+	position: fixed;
+	width: 8vw;
+	height: 45vh;
+	background-color: #f8afff;
+	border-radius: 10px;
+	z-index: 2;
+	transform: rotate(180deg);
+}
+
+.message {
+	position: fixed;
+	z-index: 10;
+	display: flex;
+	font-size: 5vh;
+	font-weight: bold;
+	color: #fff;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	text-shadow: 2px 2px 5px #000;
+	letter-spacing: 2px;
+	line-height: 1.5;
+	background-color: rgba(0, 0, 0, 0.5);
+	padding: 20px;
+	border-radius: 10px;
+	box-shadow: 2px 2px 5px #000;
+	z-index: 200;
+}
+
+.score {
+	position: fixed;
+	z-index: 10;
+	height: 10vh;
+	width: 10vh;
+	font-size: 6vh;
+	font-weight: 700;
+	color: white;
+	background-color: black;
+	border-radius: 10px;
+	top: 10px;
+	left: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.score_val {
+	color: black;
+}
+
+.game-title {
+	position: fixed;
+	z-index: 10;
+	font-size: 6vh;
+	font-weight: 700;
+	color: black;
+	top: 2vh;
+	right: 2vh;
+	text-align: right;
+}
