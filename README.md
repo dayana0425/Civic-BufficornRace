@@ -26,7 +26,7 @@ Our project's base was: [civic-pass-eth-template](https://github.com/civicteam/c
 
 ## Future Improvements
 * Implement leaderboard (Display top 10 accounts + score) & record every score on chain.
-  -Perhaps by using Polybase
+  - Perhaps by using Polybase
 * Instead of the default bufficorn, people can use their ENS Avatar instead.
   - This should be a quick add on
 * Top 10 winners are minted a special POAP for their accomplishment.
