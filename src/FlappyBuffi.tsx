@@ -25,11 +25,10 @@ function FlappyBuffi() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Enter" && gameState === "Play") {
-        console.log("pause")
+        // DO NOTHING
       }
 
       if (e.key === "Enter" && gameState === "Start") {
-        console.log("start")
         setGameState("Play");
         setScore(0);
         setPipeSprites([]);
@@ -43,7 +42,6 @@ function FlappyBuffi() {
       }
 
       if (e.key === "Enter" && gameState !== "Play") {
-        console.log("game over")
         setGameState("Play");
         setScore(0);
         setPipeSprites([]);
@@ -211,7 +209,6 @@ function FlappyBuffi() {
     pipe_seperation++;
   }
 
-  console.log("gameState", gameState);
   return (
     <div className="background" ref={backgroundRef}>
       <img className="buffi" ref={buffiRef} src="./bufficorn.png" alt="buffi" />
