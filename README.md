@@ -1,4 +1,6 @@
 # Civic Pass x Bufficorn Race Game
+### Description
+Bufficorn Race is a wallet-gated game that's a spin off of the once popular Flappy Bird game. The goal is to stop bots from sabatoshing leaderboards & to record scores on-chain so that highscores will forever reamin - just like the old school arcade games.
 
 ### You must connect your wallet to play the game
 ![](public/ConnectWallet.png)
